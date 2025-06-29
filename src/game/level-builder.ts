@@ -54,6 +54,19 @@ export function buildLevel(scene: Phaser.Scene, levelDef: LevelDef) {
         player.setBounce(0.2);
         player.setDisplaySize(tileSize, tileSize);
         player.setTint(0x00aaff); // Make player blue
+        player.setPipeline('Light2D');
+        player.setDepth(1);
+        
+        // Add glowing effect to player
+        scene.tweens.add({
+          targets: player,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 1000,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
         
         // Add collision between player and walls
         scene.physics.add.collider(player, walls);
@@ -76,6 +89,18 @@ export function buildLevel(scene: Phaser.Scene, levelDef: LevelDef) {
           sprite.setBounce(0.2);
           sprite.setDisplaySize(tileSize, tileSize);
           sprite.setTint(0xff0000); // Make enemies red
+          sprite.setPipeline('Light2D');
+          sprite.setDepth(1);
+          
+          // Add menacing glow to enemies
+          scene.tweens.add({
+            targets: sprite,
+            alpha: 0.7,
+            duration: 800 + Math.random() * 400,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
           
           // Add collision between enemies and walls
           scene.physics.add.collider(sprite, walls);
@@ -110,7 +135,7 @@ export function buildLevel(scene: Phaser.Scene, levelDef: LevelDef) {
         }
       });
       
-      // Create coin sprites
+      // Create coin sprites with more variation
       coinPositions.forEach(pos => {
         try {
           const coinSprite = scene.physics.add.sprite(
@@ -118,11 +143,68 @@ export function buildLevel(scene: Phaser.Scene, levelDef: LevelDef) {
             pos.y * tileSize + tileSize/2, 
             'floor' // Use floor as placeholder for coins
           );
-          coinSprite.setDisplaySize(tileSize * 0.5, tileSize * 0.5);
-          coinSprite.setTint(0xffd700); // Gold color
+          
+          // Vary coin sizes and values
+          const coinType = Math.random();
+          if (coinType > 0.8) {
+            // Large coin worth more
+            coinSprite.setDisplaySize(tileSize * 0.7, tileSize * 0.7);
+            coinSprite.setTint(0xff6600); // Orange color for valuable coins
+            coinSprite.setData('value', 25);
+          } else {
+            // Regular coin
+            coinSprite.setDisplaySize(tileSize * 0.5, tileSize * 0.5);
+            coinSprite.setTint(0xffd700); // Gold color
+            coinSprite.setData('value', 10);
+          }
+          
+          coinSprite.setPipeline('Light2D');
+          coinSprite.setDepth(1);
+          
+          // Add subtle animation
+          scene.tweens.add({
+            targets: coinSprite,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 1000 + Math.random() * 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+          
           coins.add(coinSprite);
         } catch (error) {
           console.warn('Could not create coin:', error);
+        }
+      });
+      
+      // Add some special power-up items
+      const powerUpPositions = coinPositions.filter(() => Math.random() > 0.85).slice(0, 2);
+      powerUpPositions.forEach(pos => {
+        try {
+          const powerUp = scene.physics.add.sprite(
+            pos.x * tileSize + tileSize/2, 
+            pos.y * tileSize + tileSize/2, 
+            'floor'
+          );
+          powerUp.setDisplaySize(tileSize * 0.6, tileSize * 0.6);
+          powerUp.setTint(0x00ff00); // Green for health
+          powerUp.setData('type', 'health');
+          powerUp.setData('value', 25);
+          
+          // Pulsing animation for power-ups
+          scene.tweens.add({
+            targets: powerUp,
+            alpha: 0.5,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Power2'
+          });
+          
+          coins.add(powerUp); // Add to same group for collision detection
+        } catch (error) {
+          console.warn('Could not create power-up:', error);
         }
       });
     }
