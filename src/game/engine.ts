@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { loadAssets } from './loader';
-import { buildLevel } from './level-builder';
 import { DynamicSystem } from './dynamic-system';
 import { ChunkManager } from './chunk-manager';
 import { OutlinePipeline } from './shaders';
+// @ts-ignore
+import { BloomPipeline } from './bloom-pipeline';
 import type { Manifest } from '../types/manifest';
 
 export class GameScene extends Phaser.Scene {
@@ -46,24 +47,82 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     try {
-      // Initialize physics world with proper bounds
-      this.physics.world.setBounds(0, 0, 1280, 960); // Larger world bounds
+      // Initialize physics world with proper bounds for the level
+      const levelWidth = 20 * 64; // 20 tiles wide
+      const levelHeight = 15 * 64; // 15 tiles tall
+      this.physics.world.setBounds(0, 0, levelWidth, levelHeight);
+      
+      // Enable lighting system
+      this.lights.enable().setAmbientColor(0x222244);
+
+      // Set camera bounds to match level
+      this.cameras.main.setBounds(0, 0, levelWidth, levelHeight);
+      this.cameras.main.setZoom(1); // Ensure proper zoom level
       
       // Add outline pipeline if renderer is WebGL
       if (this.renderer.type === Phaser.WEBGL) {
         try {
           OutlinePipeline.addToRenderer();
+          OutlinePipeline.applyToScene(this); // Apply beautiful visuals
+
+          // Add a custom bloom pipeline (if available)
+          if ((this.renderer as any).pipelines && (this.renderer as any).pipelines.add) {
+            if (!(this.renderer as any).pipelines.get('BloomPipeline')) {
+              (this.renderer as any).pipelines.add('BloomPipeline', new BloomPipeline(this.game));
+            }
+            this.cameras.main.setPostPipeline('BloomPipeline');
+          }
         } catch (error) {
           console.warn('Could not add outline pipeline:', error);
         }
       }
 
-      // Build level or load chunks
-      if (this.manifest.levels && this.manifest.levels.length > 0) {
-        buildLevel(this, this.manifest.levels[0]);
-      } else {
-        ChunkManager.loadChunk(this, Date.now(), 0, 0, this.genre);
-      }
+      // Add dramatic dynamic lights
+      // Animate dynamic lights for dramatic effect
+      const lights = [
+        this.lights.addLight(levelWidth / 2, levelHeight / 2, 400, 0xffffff, 1.0),
+        this.lights.addLight(200, 200, 250, 0xffcc88, 0.7),
+        this.lights.addLight(levelWidth - 200, levelHeight - 200, 300, 0x88aaff, 0.5)
+      ];
+      // Animate light color and intensity for drama
+      this.time.addEvent({
+        delay: 30,
+        loop: true,
+        callback: () => {
+          const t = this.time.now * 0.001;
+          // Animate center light color between white and blue
+          const c = Phaser.Display.Color.Interpolate.ColorWithColor(
+            Phaser.Display.Color.ValueToColor(0xffffff),
+            Phaser.Display.Color.ValueToColor(0x50a0ff),
+            1,
+            (Math.sin(t) + 1) / 2
+          );
+          lights[0].setColor(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
+          lights[0].intensity = 0.8 + 0.2 * Math.sin(t * 2);
+          // Animate left light color between orange and yellow
+          const c2 = Phaser.Display.Color.Interpolate.ColorWithColor(
+            Phaser.Display.Color.ValueToColor(0xffcc88),
+            Phaser.Display.Color.ValueToColor(0xffff78),
+            1,
+            (Math.cos(t * 1.5) + 1) / 2
+          );
+          lights[1].setColor(Phaser.Display.Color.GetColor(c2.r, c2.g, c2.b));
+          lights[1].intensity = 0.6 + 0.2 * Math.cos(t * 1.5);
+          // Animate right light color between blue and purple
+          const c3 = Phaser.Display.Color.Interpolate.ColorWithColor(
+            Phaser.Display.Color.ValueToColor(0x88aaff),
+            Phaser.Display.Color.ValueToColor(0xb478ff),
+            1,
+            (Math.sin(t * 1.2 + 1) + 1) / 2
+          );
+          lights[2].setColor(Phaser.Display.Color.GetColor(c3.r, c3.g, c3.b));
+          lights[2].intensity = 0.4 + 0.2 * Math.sin(t * 1.2);
+        }
+      });
+
+      // Always use procedural generation for variety - ignore static levels
+      const randomSeed = Date.now() + Math.random() * 1000;
+      ChunkManager.loadChunk(this, randomSeed, 0, 0, this.genre);
 
       // Initialize dynamic entities
       if (this.manifest.dynamicEntities) {
@@ -72,6 +131,11 @@ export class GameScene extends Phaser.Scene {
 
       // Create cursor keys once
       this.cursors = this.input.keyboard!.createCursorKeys();
+      
+      // Add spacebar for jumping in platformer games
+      if (this.cursors && this.input.keyboard) {
+        this.cursors.space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      }
 
       // Find and cache the player object
       this.findPlayer();
@@ -169,12 +233,33 @@ export class GameScene extends Phaser.Scene {
         this.player.setVelocityX(0);
       }
 
-      // Jumping (only if on ground)
-      if (this.cursors.up?.isDown && this.player.body?.touching.down) {
-        this.player.setVelocityY(-300);
+      // Jumping (only if on ground) - check if player is touching ground
+      if (this.cursors.up?.isDown || this.cursors.space?.isDown) {
+        if (this.player.body && (this.player.body as Phaser.Physics.Arcade.Body).touching.down) {
+          this.player.setVelocityY(-400); // Strong jump
+        }
       }
+      
+      // Apply gravity for platformer
+      if (this.player.body) {
+        (this.player.body as Phaser.Physics.Arcade.Body).setGravityY(800);
+      }
+    } else if (this.genre.includes('top-down') || this.genre.includes('maze')) {
+      // Top-down movement - no gravity
+      if (this.player.body) {
+        (this.player.body as Phaser.Physics.Arcade.Body).setGravityY(0);
+      }
+      this.player.setVelocity(0);
+
+      if (this.cursors.left?.isDown) this.player.setVelocityX(-speed);
+      if (this.cursors.right?.isDown) this.player.setVelocityX(speed);
+      if (this.cursors.up?.isDown) this.player.setVelocityY(-speed);
+      if (this.cursors.down?.isDown) this.player.setVelocityY(speed);
     } else {
-      // Top-down movement
+      // Arena movement - bounded but no gravity
+      if (this.player.body) {
+        (this.player.body as Phaser.Physics.Arcade.Body).setGravityY(0);
+      }
       this.player.setVelocity(0);
 
       if (this.cursors.left?.isDown) this.player.setVelocityX(-speed);
