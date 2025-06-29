@@ -134,10 +134,19 @@ export class DynamicSystem {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private static updateWanderBehavior(sprite: Phaser.Physics.Arcade.Sprite, def: DynamicEntityDef, ai: EntityAI, time: number, _delta: number) {
-    // Change direction occasionally
-    if (time - ai.lastUpdate > 2000 + Math.random() * 3000) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = ai.speed;
+    // Change direction occasionally with more interesting patterns
+    if (time - ai.lastUpdate > 1500 + Math.random() * 2000) {
+      // Sometimes move towards player area, sometimes random
+      let angle = Math.random() * Math.PI * 2;
+      
+      if (this.player && Math.random() > 0.6) {
+        // 40% chance to move generally towards player (but not directly)
+        const playerAngle = Phaser.Math.Angle.Between(sprite.x, sprite.y, this.player.x, this.player.y);
+        const variation = (Math.random() - 0.5) * Math.PI; // Add some randomness
+        angle = playerAngle + variation;
+      }
+      
+      const speed = ai.speed * (0.7 + Math.random() * 0.6); // Vary speed
       sprite.setVelocity(
         Math.cos(angle) * speed,
         Math.sin(angle) * speed
@@ -145,7 +154,7 @@ export class DynamicSystem {
       ai.lastUpdate = time;
     }
 
-    // Check for player proximity
+    // Check for player proximity and react more quickly
     if (this.player) {
       const distance = Phaser.Math.Distance.Between(sprite.x, sprite.y, this.player.x, this.player.y);
       if (distance < ai.detectionRange) {
