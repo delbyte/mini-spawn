@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import dynamic from "next/dynamic";
 
 export default function HomePage() {
   const [prompt, setPrompt] = useState('');
@@ -42,71 +43,42 @@ export default function HomePage() {
   };
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black text-white px-4">
       <Head>
-        <title>Mini Spawn - AI Game Generator</title>
-        <meta name="description" content="Generate games using AI" />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Mini Spawn</title>
       </Head>
-
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
-            🎮 Mini Spawn
-          </h1>
-          <p className="text-center text-gray-600 mb-6">
-            Describe your game and let AI create it for you!
-          </p>
-          
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-                Game Description
-              </label>
-              <textarea
-                id="prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., A space adventure with aliens and lasers"
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                rows={3}
-                disabled={isGenerating}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="genre" className="block text-sm font-medium text-gray-700 mb-2">
-                Game Genre
-              </label>
-              <select
-                id="genre"
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                disabled={isGenerating}
-              >
-                <option value="platformer">Platformer</option>
-                <option value="top-down shooter">Top-down Shooter</option>
-                <option value="maze game">Maze Game</option>
-                <option value="dungeon crawler">Dungeon Crawler</option>
-                <option value="arcade game">Arcade Game</option>
-              </select>
-            </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isGenerating ? '🎲 Generating...' : '🚀 Generate Game'}
-            </button>
-          </div>
-
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Powered by AI • Built in 24 hours</p>
-          </div>
-        </div>
+      <div className="w-full max-w-lg bg-black/60 rounded-2xl shadow-2xl p-8 flex flex-col items-center border border-blue-900">
+        <h1 className="text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-lg">Mini Spawn</h1>
+        <textarea
+          className="w-full p-4 mb-6 bg-gray-800 border border-gray-700 rounded-lg text-white shadow-lg focus:ring-2 focus:ring-blue-500 resize-none min-h-[120px]"
+          placeholder="Describe your game..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
+        <select
+          className="w-full p-4 mb-6 bg-gray-800 border border-gray-700 rounded-lg text-white shadow-lg focus:ring-2 focus:ring-blue-500"
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+        >
+          <option value="platformer">Platformer</option>
+          <option value="maze">Maze</option>
+        </select>
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isGenerating ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+              Generating...
+            </span>
+          ) : (
+            "Generate Game"
+          )}
+        </button>
       </div>
-    </>
+      <footer className="mt-10 text-gray-400 text-xs opacity-70">Made with ❤️ for the 24h game jam</footer>
+    </div>
   );
 }

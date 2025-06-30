@@ -43,7 +43,11 @@ export class ChunkManager {
           // Create platforms and gaps
           if (y === height - 1 || (y > height - 3 && randomVal < 0.8)) {
             row += 'W'; // Ground level
-          } else if (y < height - 1 && randomVal < 0.2 + noiseValue * 0.3) {
+          } else if (
+            y < height - 1 &&
+            randomVal < 0.2 + noiseValue * 0.3 &&
+            (y === 0 || row[y - 1] === 'W' || row[y - 2] === 'W') // Ensure floating blocks are at least two blocks away from the floor
+          ) {
             row += 'W'; // Floating platforms
           } else {
             row += '.'; // Air/empty space

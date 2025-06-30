@@ -233,11 +233,9 @@ export class GameScene extends Phaser.Scene {
         this.player.setVelocityX(0);
       }
 
-      // Jumping (only if on ground) - check if player is touching ground
+      // Infinite jumping - remove ground check
       if (this.cursors.up?.isDown || this.cursors.space?.isDown) {
-        if (this.player.body && (this.player.body as Phaser.Physics.Arcade.Body).touching.down) {
-          this.player.setVelocityY(-400); // Strong jump
-        }
+        this.player.setVelocityY(-400); // Strong jump
       }
       
       // Apply gravity for platformer

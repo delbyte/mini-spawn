@@ -74,10 +74,10 @@ export default function GamePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading your game...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black flex items-center justify-center">
+        <div className="text-center bg-black/60 rounded-2xl shadow-2xl p-10 border border-blue-900">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto mb-6"></div>
+          <p className="text-white text-2xl font-semibold">Loading your game...</p>
         </div>
       </div>
     );
@@ -89,14 +89,14 @@ export default function GamePage() {
         <Head>
           <title>Game Error - Mini Spawn</title>
         </Head>
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-          <div className="text-center">
+        <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black flex items-center justify-center">
+          <div className="text-center bg-black/60 rounded-2xl shadow-2xl p-10 border border-blue-900">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h1 className="text-white text-2xl mb-4">Game Load Error</h1>
             <p className="text-gray-400 mb-6">{error}</p>
             <button
               onClick={handleHome}
-              className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition-colors"
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md"
             >
               Back to Home
             </button>
@@ -107,27 +107,14 @@ export default function GamePage() {
   }
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black text-white">
       <Head>
-        <title>Game {router.query.id} - Mini Spawn</title>
+        <title>Game Screen</title>
       </Head>
-      
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-        <div className="mb-4 flex space-x-4">
-          <button
-            onClick={handleHome}
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm"
-          >
-            🏠 Home
-          </button>
-        </div>
-        
+      <div className="w-full max-w-5xl bg-black/60 rounded-2xl shadow-2xl p-8 flex flex-col items-center border border-blue-900">
         {manifest && <GameComponent manifest={manifest} gameId={router.query.id as string} />}
-        
-        <div className="mt-4 text-center text-gray-400 text-sm">
-          <p>Use arrow keys to move • Game ID: {router.query.id}</p>
-        </div>
       </div>
-    </>
+      <footer className="mt-10 text-gray-400 text-xs opacity-70">Press <b>R</b> to restart • <b>Esc</b> to quit</footer>
+    </div>
   );
 }
